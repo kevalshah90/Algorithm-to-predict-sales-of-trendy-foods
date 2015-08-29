@@ -1,0 +1,128 @@
+---
+title: "Predict food trend using social media data"
+output: html_document
+---
+
+Objective is to predict total sales volume using social media data. We'll use first 4 years as training set and last year i.e the 5th year as hold out / test set. 
+
+
+```{r}
+require(scales)
+```
+
+
+Read datasets for clementine sales and social media.  
+
+```{r}
+social <- read.csv("/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clementine_social.csv")
+
+# Check summary statistics
+summary(social)
+
+sales <- read.csv("/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clementine_sales.csv")
+
+# Check summary statistics
+summary(sales)
+```
+
+Let's make some time series plots for social media mentions and sales data for Clementines. 
+
+```{r}
+# Social media mentions plot
+
+# Date formatting 
+analysis_date = as.Date(social[,1], "%m/%d/%y")
+str(analysis_date)
+
+# Create a variable for month to aggregate / sum all observations for a particular month 
+social$month = as.Date(cut(analysis_date, breaks = "month"))
+social
+
+total_mentions = social[,9]
+
+# Create a dataset containing analysis date, month of analysis date and total social media mentions for plotting a observations aggregated at a monthly level. 
+social1 <- data.frame(analysis_date, social$month, total_mentions)
+social1
+
+require(ggplot2)
+# Time series plot by monthly total observations
+p <- ggplot(socialts, aes(x=social.month, y=total_mentions)) 
+p + geom_line() 
+# add up all observations(total_mentions) for the month
+p = p + stat_summary(fun.y = sum, geom = "line")
+p = p + ggtitle ("Total clementine mentions across different social media outlets") 
+p + xlab("Date") +  ylab ("Total mentions for Clementine")
+#p + scale_x_date(labels = date_format("%y/%m"), breaks = "1 month")
+
+# Plotting time series with curve / trendline 
+#ggplot(socialts,aes(x=social.month, y=total_mentions)) + 
+#  geom_point(aes(colour = total_mentions)) +
+#  scale_colour_gradient2(low = "blue", mid = "green" , high = "red", midpoint = 4738 ) + 
+#  geom_smooth(color = "red",size = 1) +
+#  scale_y_continuous(limits = c(899,23695)) +
+#  ggtitle ("Total clementine mentions across different social media outlets") +
+#  xlab("Date") +  ylab ("Total mentions for Clementine")
+   
+
+```
+
+```{r}
+# Sales data plot 
+
+# Date formatting 
+period = as.Date(sales[,1], "%m/%d/%y")
+str(period)
+
+Volume = sales[,6]
+
+# Create a variable for month to aggregate / sum all observations for a particular month 
+sales$month = as.Date(cut(period, breaks = "month"))
+sales
+
+# Bind period, sales month and volume into a data frame 
+sales1 <- data.frame(period, sales$month, Volume)
+
+# Now, let's plot time series of montly aggregated total Clementine sales volume
+p <- ggplot(salests, aes(x=sales.month, y=Volume))
+p + geom_line() 
+# add up all observations(total_mentions) for the month
+p = p + stat_summary(fun.y = sum, geom = "line")
+#p = p + scale_y_continuous(limits = c(211151,10017414))
+p = p + ggtitle ("Total volume of clementine sales (in U.S)") 
+p + xlab("Date") +  ylab ("Total Volume of Clementine sales")
+```
+
+Next steps: 
+
+- Review time series textbook / literature for the right technique to deal with a seasonality:
+detrending, differencing (average out)
+- Understanding time series seasonal fluctuations or random fluctuations. 
+- Decomposing the time series. There appears to be some seasonality in sales data. Look into smoothing, differencing and other time series techniques to control for seasonality. 
+- Stationarity check. 
+
+http://a-little-book-of-r-for-time-series.readthedocs.org/en/latest/src/timeseries.html 
+
+Based on text readings: 
+
+1. Decompose the time series and obtain trend, seasonal and random noise component from series. 
+2. Remove seasonal component. The remaining time series should consist of trend and random noise. 
+
+
+
+Decomposing the time series into trend, seasonal and irregular components. 
+
+```{r}
+salests = sales[, c(1,6)]
+View(salests)
+salestsDec <- ts(salests, frequency=52, start=c(2010, 1), end=c(2014,12))
+salestsDec <- decompose(salestsDec, type=c("additive"))
+plot(salestsDec)
+```
+
+Plot seasonally adjusted time series 
+
+```{r}
+salestsSeasonallyadjusted <- salests - salestsDec$seasonal
+```
+
+
