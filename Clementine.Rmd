@@ -3,7 +3,7 @@ title: "Predict food trend using social media data"
 output: html_document
 ---
 
-Objective is to predict total sales volume using social media data. We'll use first 4 years as training set and last year i.e the 5th year as hold out / test set. 
+Objective is to predict total sales volume using social media data. 
 
 
 ```{r}
@@ -17,12 +17,14 @@ Read datasets for clementine sales and social media.
 social <- read.csv("/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clementine_social.csv")
 
 # Check summary statistics
-summary(social)
+#summary(social)
+head(social[1:9])
 
 sales <- read.csv("/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clementine_sales.csv")
 
 # Check summary statistics
-summary(sales)
+#summary(sales)
+head(sales)
 ```
 
 Let's make some time series plots for social media mentions and sales data for Clementines. 
@@ -36,17 +38,17 @@ str(analysis_date)
 
 # Create a variable for month to aggregate / sum all observations for a particular month 
 social$month = as.Date(cut(analysis_date, breaks = "month"))
-social
+#social
 
 total_mentions = social[,9]
 
 # Create a dataset containing analysis date, month of analysis date and total social media mentions for plotting a observations aggregated at a monthly level. 
 social1 <- data.frame(analysis_date, social$month, total_mentions)
-social1
+#social1
 
 require(ggplot2)
 # Time series plot by monthly total observations
-p <- ggplot(socialts, aes(x=social.month, y=total_mentions)) 
+p <- ggplot(social1, aes(x=social.month, y=total_mentions)) 
 p + geom_line() 
 # add up all observations(total_mentions) for the month
 p = p + stat_summary(fun.y = sum, geom = "line")
@@ -77,13 +79,13 @@ Volume = sales[,6]
 
 # Create a variable for month to aggregate / sum all observations for a particular month 
 sales$month = as.Date(cut(period, breaks = "month"))
-sales
+#sales
 
 # Bind period, sales month and volume into a data frame 
 sales1 <- data.frame(period, sales$month, Volume)
 
 # Now, let's plot time series of montly aggregated total Clementine sales volume
-p <- ggplot(salests, aes(x=sales.month, y=Volume))
+p <- ggplot(sales1, aes(x=sales.month, y=Volume))
 p + geom_line() 
 # add up all observations(total_mentions) for the month
 p = p + stat_summary(fun.y = sum, geom = "line")
@@ -105,24 +107,52 @@ http://a-little-book-of-r-for-time-series.readthedocs.org/en/latest/src/timeseri
 Based on text readings: 
 
 1. Decompose the time series and obtain trend, seasonal and random noise component from series. 
-2. Remove seasonal component. The remaining time series should consist of trend and random noise. 
+2. Remove seasonal component. The remaining time series should be trend and random noise. 
+3. Regression modeling: Use dummy variables for each of months, maybe season as predictors and run the model. Note R-Squared. 
 
 
 
 Decomposing the time series into trend, seasonal and irregular components. 
 
 ```{r}
+# Columns required time and volume
+
+#Using zoo object
+require(zoo)
 salests = sales[, c(1,6)]
-View(salests)
-salestsDec <- ts(salests, frequency=52, start=c(2010, 1), end=c(2014,12))
-salestsDec <- decompose(salestsDec, type=c("additive"))
-plot(salestsDec)
+salestsz = read.zoo(salests, format = "%m/%d/%y", index.column = 1)
+View(salestsz)
+
+#Decompose zoo object
+salestszDec <- ts(salestsz, frequency=52, start=c(2010, 1), end=c(2014,12))
+salestsDec1 <- decompose(salestszDec, type=c("additive"))
+plot(salestsDec1)
+
+
+# Frequency = 52 weeks in year. i.e 52 # of observations in one year. 
+#salestsDec <- ts(salests[,2], frequency=52, start=c(2010, 1), end=c(2014,12))
+#salestsDec <- decompose(salestsDec, type=c("additive"))
+#plot(salestsDec)
+
 ```
 
 Plot seasonally adjusted time series 
 
 ```{r}
-salestsSeasonallyadjusted <- salests - salestsDec$seasonal
+# Check object type
+class(salestsDec1$seasonal)
+class(salestszDec)
+# Both are 'ts' object, so we need to convert to numeric to be able to perform math operation of subtracting seasonal component from the original series. 
+
+
+salestszDec <- as.numeric(unlist(salestszDec))
+class(salestszDec)
+salestszSeasonallyAdjusted <- salestszDec - salestsDec1$seasonal
+
+#Plot seasonally adjusted time series
+plot(salestszSeasonallyAdjusted, xlab="Time", ylab="Volume of sales", main="Seasonally adjusted clementine sales volume")
 ```
+
+
 
 
