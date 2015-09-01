@@ -157,11 +157,366 @@ require(xlsx)
 # Don't re-run, the file will append the current combined file. 
 write.xlsx(salestsDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 
-
 ```
 
 
+Decompose the time series and adjust seasonality for $$ amounts from clementine sales. 
+
+```{r}
+# Columns required time and Price
+
+#Using zoo object for time indexing
+require(zoo)
+clemSalesPrice = sales[, c(1,5)]
+clemSalesPricez = read.zoo(clemSalesPrice, format = "%m/%d/%y", index.column = 1)
+View(clemSalesPricez)
 
 
+#Decompose zoo object
+clemSalesPricezDec <- ts(clemSalesPricez, frequency=52, start=c(2010, 1), end=c(2014,12))
+clemSalesPriceDec1 <- decompose(clemSalesPricezDec, type=c("additive"))
+plot(clemSalesPriceDec1)
 
 
+# Frequency = 52 weeks in year. i.e 52 # of observations in one year. 
+#salestsDec <- ts(salests[,2], frequency=52, start=c(2010, 1), end=c(2014,12))
+#salestsDec <- decompose(salestsDec, type=c("additive"))
+#plot(salestsDec)
+
+```
+
+Plot seasonally adjusted time series 
+
+```{r}
+# Check object type
+class(clemSalesPriceDec1$seasonal)
+class(clemSalesPricezDec)
+# Both are 'ts' object, so we need to convert to numeric to be able to perform math operation of subtracting seasonal component from the original series. 
+
+
+clemSalesPricezDec <- as.numeric(unlist(clemSalesPricezDec))
+class(clemSalesPricezDec)
+clemSalesPriceSeasonallyAdjusted <- clemSalesPricezDec - clemSalesPriceDec1$seasonal
+
+#Plot seasonally adjusted time series
+plot(clemSalesPriceSeasonallyAdjusted, xlab="Time", ylab="Dollar amount", main="Seasonally adjusted clementine sales (Dollar amount)")
+
+require(xlsx)
+# Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
+
+write.xlsx(clemSalesPriceDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted_price.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemSalesPriceDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted_price1.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemSalesPriceSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted_price2.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+```
+
+
+Decompose the time series and adjust seasonality for social media mentions.
+
+Twitter mentions
+
+```{r}
+# Columns required time and twitter mentions
+
+#Using zoo object for time indexing
+require(zoo)
+clemTwitter = social[, c(1,6)]
+clemTwitterz = read.zoo(clemTwitter, format = "%m/%d/%y", index.column = 1)
+View(clemSalesPricez)
+
+
+#Decompose zoo object
+clemTwitterzDec <- ts(clemTwitterz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemTwitterDec1 <- decompose(clemTwitterzDec, type=c("additive"))
+plot(clemTwitterDec1)
+
+
+# Frequency = 52 weeks in year. i.e 52 # of observations in one year. 
+#salestsDec <- ts(salests[,2], frequency=52, start=c(2010, 1), end=c(2014,12))
+#salestsDec <- decompose(salestsDec, type=c("additive"))
+#plot(salestsDec)
+
+```
+
+Plot seasonally adjusted time series 
+
+```{r}
+# Check object type
+class(clemTwitterDec1$seasonal)
+class(clemTwitterzDec)
+# Both are 'ts' object, so we need to convert to numeric to be able to perform math operation of subtracting seasonal component from the original series. 
+
+
+clemTwitterzDec <- as.numeric(unlist(clemTwitterzDec))
+class(clemTwitterzDec)
+clemTwitterSeasonallyAdjusted <- clemTwitterzDec - clemTwitterDec1$seasonal
+
+#Plot seasonally adjusted time series
+plot(clemTwitterSeasonallyAdjusted, xlab="Time", ylab="Twitter mentions", main="Seasonally adjusted clementine twitter mentions")
+
+require(xlsx)
+# Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
+
+write.xlsx(clemTwitterDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemTwitterDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemTwitterSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+```
+
+
+Facebook mentions
+
+```{r}
+# Columns required time and facebook mentions
+
+#Using zoo object for time indexing
+require(zoo)
+clemFacebook = social[, c(1,5)]
+clemFacebookz = read.zoo(clemFacebook, format = "%m/%d/%y", index.column = 1)
+View(clemFacebookz)
+
+
+#Decompose zoo object
+clemFacebookzDec <- ts(clemFacebookz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemFacebookDec1 <- decompose(clemFacebookzDec, type=c("additive"))
+plot(clemFacebookDec1)
+
+
+# Frequency = 52 weeks in year. i.e 52 # of observations in one year. 
+#salestsDec <- ts(salests[,2], frequency=52, start=c(2010, 1), end=c(2014,12))
+#salestsDec <- decompose(salestsDec, type=c("additive"))
+#plot(salestsDec)
+
+```
+
+Plot seasonally adjusted time series 
+
+```{r}
+# Check object type
+class(clemFacebookDec1$seasonal)
+class(clemFacebookzDec)
+# Both are 'ts' object, so we need to convert to numeric to be able to perform math operation of subtracting seasonal component from the original series. 
+
+
+clemFacebookzDec <- as.numeric(unlist(clemFacebookzDec))
+class(clemFacebookzDec)
+clemFacebookSeasonallyAdjusted <- clemFacebookzDec - clemFacebookDec1$seasonal
+
+#Plot seasonally adjusted time series
+plot(clemFacebookSeasonallyAdjusted, xlab="Time", ylab="Facebook mentions", main="Seasonally adjusted clementine Facebook mentions")
+
+require(xlsx)
+# Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
+
+write.xlsx(clemFacebookDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_fb.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemFacebookDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1_fb.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemFacebookSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2_fb.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+```
+
+Blogs mentions
+
+```{r}
+# Columns required time and blog mentions
+
+#Using zoo object for time indexing
+require(zoo)
+clemBlog = social[, c(1,2)]
+clemBlogz = read.zoo(clemBlog, format = "%m/%d/%y", index.column = 1)
+View(clemBlogz)
+
+
+#Decompose zoo object
+clemBlogzDec <- ts(clemBlogz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemBlogDec1 <- decompose(clemBlogzDec, type=c("additive"))
+plot(clemBlogDec1)
+
+
+# Frequency = 52 weeks in year. i.e 52 # of observations in one year. 
+#salestsDec <- ts(salests[,2], frequency=52, start=c(2010, 1), end=c(2014,12))
+#salestsDec <- decompose(salestsDec, type=c("additive"))
+#plot(salestsDec)
+
+```
+
+Plot seasonally adjusted time series 
+
+```{r}
+# Check object type
+class(clemBlogDec1$seasonal)
+class(clemBlogzDec)
+# Both are 'ts' object, so we need to convert to numeric to be able to perform math operation of subtracting seasonal component from the original series. 
+
+
+clemBlogzDec <- as.numeric(unlist(clemBlogzDec))
+class(clemBlogzDec)
+clemBlogSeasonallyAdjusted <- clemBlogzDec - clemBlogDec1$seasonal
+
+#Plot seasonally adjusted time series
+plot(clemBlogSeasonallyAdjusted, xlab="Time", ylab="Blog mentions", main="Seasonally adjusted clementine Blog mentions")
+
+require(xlsx)
+# Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
+
+write.xlsx(clemBlogDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_b.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemBlogDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1_b.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemBlogSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2_b.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+```
+
+Forums mentions
+
+```{r}
+# Columns required time and blog mentions
+
+#Using zoo object for time indexing
+require(zoo)
+clemForums = social[, c(1,3)]
+clemForumsz = read.zoo(clemForums, format = "%m/%d/%y", index.column = 1)
+View(clemForumsz)
+
+
+#Decompose zoo object
+clemForumszDec <- ts(clemForumsz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemForumsDec1 <- decompose(clemForumszDec, type=c("additive"))
+plot(clemForumsDec1)
+
+
+# Frequency = 52 weeks in year. i.e 52 # of observations in one year. 
+#salestsDec <- ts(salests[,2], frequency=52, start=c(2010, 1), end=c(2014,12))
+#salestsDec <- decompose(salestsDec, type=c("additive"))
+#plot(salestsDec)
+
+```
+
+Plot seasonally adjusted time series 
+
+```{r}
+# Check object type
+class(clemForumsDec1$seasonal)
+class(clemForumszDec)
+# Both are 'ts' object, so we need to convert to numeric to be able to perform math operation of subtracting seasonal component from the original series. 
+
+
+clemForumszDec <- as.numeric(unlist(clemForumszDec))
+class(clemForumszDec)
+clemForumsSeasonallyAdjusted <- clemForumszDec - clemForumsDec1$seasonal
+
+#Plot seasonally adjusted time series
+plot(clemForumsSeasonallyAdjusted, xlab="Time", ylab="Forum mentions", main="Seasonally adjusted clementine Forum mentions")
+
+require(xlsx)
+# Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
+
+write.xlsx(clemForumsDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_f.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemForumsDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1_f.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemForumsSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2_f.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+```
+
+Reviews mention
+
+```{r}
+# Columns required time and blog mentions
+
+#Using zoo object for time indexing
+require(zoo)
+clemReviews = social[, c(1,4)]
+clemReviewsz = read.zoo(clemReviews, format = "%m/%d/%y", index.column = 1)
+View(clemReviewsz)
+
+
+#Decompose zoo object
+clemReviewszDec <- ts(clemReviewsz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemReviewsDec1 <- decompose(clemReviewszDec, type=c("additive"))
+plot(clemReviewsDec1)
+
+
+# Frequency = 52 weeks in year. i.e 52 # of observations in one year. 
+#salestsDec <- ts(salests[,2], frequency=52, start=c(2010, 1), end=c(2014,12))
+#salestsDec <- decompose(salestsDec, type=c("additive"))
+#plot(salestsDec)
+
+```
+
+Plot seasonally adjusted time series 
+
+```{r}
+# Check object type
+class(clemReviewsDec1$seasonal)
+class(clemReviewszDec)
+# Both are 'ts' object, so we need to convert to numeric to be able to perform math operation of subtracting seasonal component from the original series. 
+
+
+clemReviewszDec <- as.numeric(unlist(clemReviewszDec))
+class(clemReviewszDec)
+clemReviewsSeasonallyAdjusted <- clemReviewszDec - clemReviewsDec1$seasonal
+
+#Plot seasonally adjusted time series
+plot(clemReviewsSeasonallyAdjusted, xlab="Time", ylab="Reviews mentions", main="Seasonally adjusted clementine Reviews mentions")
+
+require(xlsx)
+# Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
+
+write.xlsx(clemReviewsDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_r.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemReviewsDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1_f.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemReviewsSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2_r.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+```
+
+Comments mention 
+
+```{r}
+# Columns required time and comments mentions
+
+#Using zoo object for time indexing
+require(zoo)
+clemComments = social[, c(1,7)]
+clemCommentsz = read.zoo(clemReviews, format = "%m/%d/%y", index.column = 1)
+View(clemCommentsz)
+
+
+#Decompose zoo object
+clemCommentszDec <- ts(clemCommentsz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemCommentsDec1 <- decompose(clemCommentszDec, type=c("additive"))
+plot(clemCommentsDec1)
+
+
+# Frequency = 52 weeks in year. i.e 52 # of observations in one year. 
+#salestsDec <- ts(salests[,2], frequency=52, start=c(2010, 1), end=c(2014,12))
+#salestsDec <- decompose(salestsDec, type=c("additive"))
+#plot(salestsDec)
+
+```
+
+Plot seasonally adjusted time series 
+
+```{r}
+# Check object type
+class(clemCommentsDec1$seasonal)
+class(clemCommentszDec)
+# Both are 'ts' object, so we need to convert to numeric to be able to perform math operation of subtracting seasonal component from the original series. 
+
+
+clemCommentszDec <- as.numeric(unlist(clemCommentszDec))
+class(clemCommentszDec)
+clemCommentsSeasonallyAdjusted <- clemCommentszDec - clemCommentsDec1$seasonal
+
+#Plot seasonally adjusted time series
+plot(clemCommentsSeasonallyAdjusted, xlab="Time", ylab="Comments mentions", main="Seasonally adjusted clementine Comment mentions")
+
+require(xlsx)
+# Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
+
+write.xlsx(clemCommentsDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_c.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemCommentsDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1_c.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+write.xlsx(clemCommentsSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2_c.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+```
