@@ -123,6 +123,7 @@ salests = sales[, c(1,6)]
 salestsz = read.zoo(salests, format = "%m/%d/%y", index.column = 1)
 View(salestsz)
 
+
 #Decompose zoo object
 salestszDec <- ts(salestsz, frequency=52, start=c(2010, 1), end=c(2014,12))
 salestsDec1 <- decompose(salestszDec, type=c("additive"))
@@ -151,7 +152,15 @@ salestszSeasonallyAdjusted <- salestszDec - salestsDec1$seasonal
 
 #Plot seasonally adjusted time series
 plot(salestszSeasonallyAdjusted, xlab="Time", ylab="Volume of sales", main="Seasonally adjusted clementine sales volume")
+
+require(xlsx)
+# Don't re-run, the file will append the current combined file. 
+write.xlsx(salestsDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+
+
 ```
+
+
 
 
 
