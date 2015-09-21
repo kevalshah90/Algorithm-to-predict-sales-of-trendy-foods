@@ -94,23 +94,17 @@ p = p + ggtitle ("Total volume of clementine sales (in U.S)")
 p + xlab("Date") +  ylab ("Total Volume of Clementine sales")
 ```
 
-Next steps: 
-
-- Review time series textbook / literature for the right technique to deal with a seasonality:
-detrending, differencing (average out)
-- Understanding time series seasonal fluctuations or random fluctuations. 
-- Decomposing the time series. There appears to be some seasonality in sales data. Look into smoothing, differencing and other time series techniques to control for seasonality. 
-- Stationarity check. 
-
-http://a-little-book-of-r-for-time-series.readthedocs.org/en/latest/src/timeseries.html 
-
-Based on text readings: 
-
-1. Decompose the time series and obtain trend, seasonal and random noise component from series. 
-2. Remove seasonal component. The remaining time series should be trend and random noise. 
-3. Regression modeling: Use dummy variables for each of months, maybe season as predictors and run the model. Note R-Squared. 
 
 
+
+
+Remove seasonal component. The remaining time series should be trend and random noise. 
+
+Why do we seasonally adjust data? 
+
+http://www.bls.gov/cps/seasfaq.htm 
+
+In order to obtain / understand the true underlying trend, we need to seasonally adjust the data. Upon, seasonally adjusting the data we get the trend component, seasonal component and irregular time series component. 
 
 Decomposing the time series into trend, seasonal and irregular components. 
 
@@ -125,8 +119,10 @@ View(salestsz)
 
 
 #Decompose zoo object
-salestszDec <- ts(salestsz, frequency=52, start=c(2010, 1), end=c(2014,12))
+salestszDec <- ts(salestsz, frequency=52, start=c(2010, 1))
+View(salestszDec)
 salestsDec1 <- decompose(salestszDec, type=c("additive"))
+View(salestszDec)
 plot(salestsDec1)
 
 
@@ -153,10 +149,13 @@ salestszSeasonallyAdjusted <- salestszDec - salestsDec1$seasonal
 #Plot seasonally adjusted time series
 plot(salestszSeasonallyAdjusted, xlab="Time", ylab="Volume of sales", main="Seasonally adjusted clementine sales volume")
 
+clemSalesFinal <- cbind(index(salestsz),salestsDec1$x,salestsDec1$seasonal,salestszSeasonallyAdjusted)
+
 require(xlsx)
 # Don't re-run, the file will append the current combined file. 
-write.xlsx(salestsDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+write.xlsx(clemSalesFinal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted_1.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 
+index(salestsz)
 ```
 
 
@@ -169,11 +168,10 @@ Decompose the time series and adjust seasonality for $$ amounts from clementine 
 require(zoo)
 clemSalesPrice = sales[, c(1,5)]
 clemSalesPricez = read.zoo(clemSalesPrice, format = "%m/%d/%y", index.column = 1)
-View(clemSalesPricez)
 
 
 #Decompose zoo object
-clemSalesPricezDec <- ts(clemSalesPricez, frequency=52, start=c(2010, 1), end=c(2014,12))
+clemSalesPricezDec <- ts(clemSalesPricez, frequency=52, start=c(2010, 1))
 clemSalesPriceDec1 <- decompose(clemSalesPricezDec, type=c("additive"))
 plot(clemSalesPriceDec1)
 
@@ -185,7 +183,7 @@ plot(clemSalesPriceDec1)
 
 ```
 
-Plot seasonally adjusted time series 
+Plot seasonally adjusted time series (Price)
 
 ```{r}
 # Check object type
@@ -201,14 +199,14 @@ clemSalesPriceSeasonallyAdjusted <- clemSalesPricezDec - clemSalesPriceDec1$seas
 #Plot seasonally adjusted time series
 plot(clemSalesPriceSeasonallyAdjusted, xlab="Time", ylab="Dollar amount", main="Seasonally adjusted clementine sales (Dollar amount)")
 
+# Combine columns 
+clemsalesPriceFinal <- cbind(clemSalesPriceDec1$x,clemSalesPriceDec1$seasonal,clemSalesPriceSeasonallyAdjusted)
+
+
 require(xlsx)
 # Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
 
-write.xlsx(clemSalesPriceDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted_price.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-
-write.xlsx(clemSalesPriceDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted_price1.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-
-write.xlsx(clemSalesPriceSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted_price2.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+write.xlsx(clemsalesPriceFinal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_sales_seasonally_adjusted_price.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 ```
 
 
@@ -227,7 +225,7 @@ View(clemSalesPricez)
 
 
 #Decompose zoo object
-clemTwitterzDec <- ts(clemTwitterz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemTwitterzDec <- ts(clemTwitterz, frequency=52, start=c(2010, 1))
 clemTwitterDec1 <- decompose(clemTwitterzDec, type=c("additive"))
 plot(clemTwitterDec1)
 
@@ -239,7 +237,7 @@ plot(clemTwitterDec1)
 
 ```
 
-Plot seasonally adjusted time series 
+Plot seasonally adjusted time series (Twitter)
 
 ```{r}
 # Check object type
@@ -252,17 +250,17 @@ clemTwitterzDec <- as.numeric(unlist(clemTwitterzDec))
 class(clemTwitterzDec)
 clemTwitterSeasonallyAdjusted <- clemTwitterzDec - clemTwitterDec1$seasonal
 
-#Plot seasonally adjusted time series
+# Plot seasonally adjusted time series
 plot(clemTwitterSeasonallyAdjusted, xlab="Time", ylab="Twitter mentions", main="Seasonally adjusted clementine twitter mentions")
+
+# Combine columns 
+clemTwitterFinal <- cbind(clemTwitterDec1$x,clemTwitterDec1$seasonal,clemTwitterSeasonallyAdjusted)
 
 require(xlsx)
 # Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
 
-write.xlsx(clemTwitterDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+write.xlsx(clemTwitterFinal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_twitter.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 
-write.xlsx(clemTwitterDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-
-write.xlsx(clemTwitterSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 ```
 
 
@@ -279,7 +277,7 @@ View(clemFacebookz)
 
 
 #Decompose zoo object
-clemFacebookzDec <- ts(clemFacebookz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemFacebookzDec <- ts(clemFacebookz, frequency=52, start=c(2010, 1))
 clemFacebookDec1 <- decompose(clemFacebookzDec, type=c("additive"))
 plot(clemFacebookDec1)
 
@@ -291,7 +289,7 @@ plot(clemFacebookDec1)
 
 ```
 
-Plot seasonally adjusted time series 
+Plot seasonally adjusted time series (Facebook)
 
 ```{r}
 # Check object type
@@ -307,14 +305,14 @@ clemFacebookSeasonallyAdjusted <- clemFacebookzDec - clemFacebookDec1$seasonal
 #Plot seasonally adjusted time series
 plot(clemFacebookSeasonallyAdjusted, xlab="Time", ylab="Facebook mentions", main="Seasonally adjusted clementine Facebook mentions")
 
+#Combine data
+clemFacebookFinal <- cbind(clemFacebookDec1$x,clemFacebookDec1$seasonal,clemFacebookSeasonallyAdjusted)
+
 require(xlsx)
 # Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
 
-write.xlsx(clemFacebookDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_fb.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+write.xlsx(clemFacebookFinal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_fb.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 
-write.xlsx(clemFacebookDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1_fb.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-
-write.xlsx(clemFacebookSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2_fb.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 ```
 
 Blogs mentions
@@ -330,7 +328,7 @@ View(clemBlogz)
 
 
 #Decompose zoo object
-clemBlogzDec <- ts(clemBlogz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemBlogzDec <- ts(clemBlogz, frequency=52, start=c(2010, 1))
 clemBlogDec1 <- decompose(clemBlogzDec, type=c("additive"))
 plot(clemBlogDec1)
 
@@ -342,7 +340,7 @@ plot(clemBlogDec1)
 
 ```
 
-Plot seasonally adjusted time series 
+Plot seasonally adjusted time series (Blog)
 
 ```{r}
 # Check object type
@@ -358,20 +356,21 @@ clemBlogSeasonallyAdjusted <- clemBlogzDec - clemBlogDec1$seasonal
 #Plot seasonally adjusted time series
 plot(clemBlogSeasonallyAdjusted, xlab="Time", ylab="Blog mentions", main="Seasonally adjusted clementine Blog mentions")
 
+# Combine data 
+clemBlogFinal <- cbind(clemBlogDec1$x,clemBlogDec1$seasonal,clemBlogSeasonallyAdjusted)
+
+
 require(xlsx)
 # Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
 
-write.xlsx(clemBlogDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_b.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+write.xlsx(clemBlogFinal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_blog.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 
-write.xlsx(clemBlogDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1_b.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-
-write.xlsx(clemBlogSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2_b.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 ```
 
 Forums mentions
 
 ```{r}
-# Columns required time and blog mentions
+# Columns required time and forums mentions
 
 #Using zoo object for time indexing
 require(zoo)
@@ -381,7 +380,7 @@ View(clemForumsz)
 
 
 #Decompose zoo object
-clemForumszDec <- ts(clemForumsz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemForumszDec <- ts(clemForumsz, frequency=52, start=c(2010, 1))
 clemForumsDec1 <- decompose(clemForumszDec, type=c("additive"))
 plot(clemForumsDec1)
 
@@ -393,7 +392,7 @@ plot(clemForumsDec1)
 
 ```
 
-Plot seasonally adjusted time series 
+Plot seasonally adjusted time series (Forums)
 
 ```{r}
 # Check object type
@@ -409,14 +408,13 @@ clemForumsSeasonallyAdjusted <- clemForumszDec - clemForumsDec1$seasonal
 #Plot seasonally adjusted time series
 plot(clemForumsSeasonallyAdjusted, xlab="Time", ylab="Forum mentions", main="Seasonally adjusted clementine Forum mentions")
 
+#Combine data
+clemForumsFinal <- cbind(clemForumsDec1$x,clemForumsDec1$seasonal,clemForumsSeasonallyAdjusted)
 require(xlsx)
 # Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
 
-write.xlsx(clemForumsDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_f.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+write.xlsx(clemForumsFinal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_forums.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 
-write.xlsx(clemForumsDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1_f.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-
-write.xlsx(clemForumsSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2_f.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 ```
 
 Reviews mention
@@ -432,7 +430,7 @@ View(clemReviewsz)
 
 
 #Decompose zoo object
-clemReviewszDec <- ts(clemReviewsz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemReviewszDec <- ts(clemReviewsz, frequency=52, start=c(2010, 1))
 clemReviewsDec1 <- decompose(clemReviewszDec, type=c("additive"))
 plot(clemReviewsDec1)
 
@@ -444,7 +442,7 @@ plot(clemReviewsDec1)
 
 ```
 
-Plot seasonally adjusted time series 
+Plot seasonally adjusted time series (Reviews)
 
 ```{r}
 # Check object type
@@ -460,14 +458,14 @@ clemReviewsSeasonallyAdjusted <- clemReviewszDec - clemReviewsDec1$seasonal
 #Plot seasonally adjusted time series
 plot(clemReviewsSeasonallyAdjusted, xlab="Time", ylab="Reviews mentions", main="Seasonally adjusted clementine Reviews mentions")
 
+#Combine data
+clemReviewsFinal <- cbind(clemReviewsDec1$x,clemReviewsDec1$seasonal,clemReviewsSeasonallyAdjusted)
+
 require(xlsx)
 # Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
 
-write.xlsx(clemReviewsDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_r.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+write.xlsx(clemReviewsFinal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_reviews.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 
-write.xlsx(clemReviewsDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1_f.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-
-write.xlsx(clemReviewsSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2_r.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 ```
 
 Comments mention 
@@ -478,12 +476,12 @@ Comments mention
 #Using zoo object for time indexing
 require(zoo)
 clemComments = social[, c(1,7)]
-clemCommentsz = read.zoo(clemReviews, format = "%m/%d/%y", index.column = 1)
+clemCommentsz = read.zoo(clemComments, format = "%m/%d/%y", index.column = 1)
 View(clemCommentsz)
 
 
 #Decompose zoo object
-clemCommentszDec <- ts(clemCommentsz, frequency=52, start=c(2010, 1), end=c(2014, 12))
+clemCommentszDec <- ts(clemCommentsz, frequency=52, start=c(2010, 1))
 clemCommentsDec1 <- decompose(clemCommentszDec, type=c("additive"))
 plot(clemCommentsDec1)
 
@@ -495,7 +493,7 @@ plot(clemCommentsDec1)
 
 ```
 
-Plot seasonally adjusted time series 
+Plot seasonally adjusted time series (Comments)
 
 ```{r}
 # Check object type
@@ -511,12 +509,36 @@ clemCommentsSeasonallyAdjusted <- clemCommentszDec - clemCommentsDec1$seasonal
 #Plot seasonally adjusted time series
 plot(clemCommentsSeasonallyAdjusted, xlab="Time", ylab="Comments mentions", main="Seasonally adjusted clementine Comment mentions")
 
+#Combine data
+clemCommentsFinal <- cbind(clemCommentsDec1$x,clemCommentsDec1$seasonal,clemCommentsSeasonallyAdjusted)
+
 require(xlsx)
 # Don't re-run, the file will append the current combined file. Write original price, seasonal component and seasonally adjusted values to en excel file
 
-write.xlsx(clemCommentsDec1$x, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_c.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
+write.xlsx(clemCommentsFinal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted_comments.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 
-write.xlsx(clemCommentsDec1$seasonal, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted1_c.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
-
-write.xlsx(clemCommentsSeasonallyAdjusted, file="/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/clem_social_seasonally_adjusted2_c.xlsx", sheetName="sheet1", col.names=TRUE, row.names=FALSE, append=FALSE, showNA=TRUE)
 ```
+
+Indexing can be an effective means of normalizing data to a common starting point and observing how variables change over time relative to each other.
+
+Indexing: Modifying two or more numeric data series so that the resulting series start at the same value and change at the same rate as the unmodified series. 
+
+Normalizing data for Platform Growth - The total volume of tweets / FB posts and so on for each of the social media platforms. In the case of the twitter data here, the search term was actually the total # of times the word "the" was tweeted (so as to provide a search term), but can be considered a proxy for total activity.
+
+Read platform growth data 
+
+```{r}
+platform <- read.csv("/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/Platform_growth.csv")
+```
+
+Indexing platform growth data. There seems to be some noise in the beginning few weeks in data. Therefore, we index the data to 12/11/11 as the observations for each of the social media for that week appears to be fine. 
+
+Excel: Indexed social media and platform growth data. Calculated the ratio of indexed data sources to obtain a pure number that can be used to compare with sales data. 
+
+Next steps: 
+
+- Analyze sales and social media data by plotting the trendlines for both of the time series. 
+
+
+
+
