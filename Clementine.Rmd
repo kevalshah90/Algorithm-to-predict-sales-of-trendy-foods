@@ -95,9 +95,6 @@ p + xlab("Date") +  ylab ("Total Volume of Clementine sales")
 ```
 
 
-
-
-
 Remove seasonal component. The remaining time series should be trend and random noise. 
 
 Why do we seasonally adjust data? 
@@ -531,14 +528,25 @@ Read platform growth data
 platform <- read.csv("/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/Platform_growth.csv")
 ```
 
-Indexing platform growth data. There seems to be some noise in the beginning few weeks in data. Therefore, we index the data to 12/11/11 as the observations for each of the social media for that week appears to be fine. 
 
-Excel: Indexed social media and platform growth data. Calculated the ratio of indexed data sources to obtain a pure number that can be used to compare with sales data. 
+Steps taken in Excel to Index / Normalize seasonally adjusted sales volume and social media mentions data. 
+
+-	Platform Dynamics data (Volume of activity on each social media platform) indexed to a more recent data where the data looks reasonable for each of the social media platforms. So, it was indexed to an average of observations for the Month of January of 2012. 
+-	Pivot the data to Filter out 2008 and 2009 data so that we’re left with data from beginning of 2010 to match with our seasonally adjusted social media mentions data.
+-	Since the data the original social media mentions data and sales datas are at weekly level, Indexed PD data was rolled up to weekly level and an average of that week was calculated and used as an observation. 
+-	The seasonally adjusted social media mentions data was then divided by  an average of weekly Platform dynamics data calculated in previous step to obtain a normalized value. 
+-	Percent values of normalized data obtained from previous step i.e dividing seasonally adjusted social media mentions were calculated. 
+-	Seasonally adjusted sales volume was indexed to an average on weekly (count 4) observations for Jan’12 (to keep it consistent with PD) 
+-	Calculate 7 Day Moving Average of final percent values of indexed sales volume and seasonally adjusted indexed normalized social media mentions data and plot the trend lines. 
 
 Next steps: 
 
-- Analyze sales and social media data by plotting the trendlines for both of the time series. 
+Read final cleaned up dataset of sales volume + social media mentions data and build 
+a linear regression model in time series context (?) to derive the coefficients. 
 
+Pseudo code: 
+
+Sales volume ~ twitter + fb + blogs + forums + reviews + comments 
 
 
 
