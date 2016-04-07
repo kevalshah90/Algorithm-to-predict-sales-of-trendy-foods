@@ -1,0 +1,655 @@
+---
+title: "VAR_Model_Cupcakes_v1"
+output: html_document
+---
+
+Steps for VAR Modeling - 
+
+1. Seasonally adjust the data 
+2. Individual ARIMA models, both time series needs to be I(1) process. 
+    Interpret ACF, PACF, Residuals - White noise plots? 
+3. ADF and KPSS test -> Not stationary. 
+4. Johanessen test for cointegration. 
+5. VAR Model - Train / test prediction error
+
+
+
+Read seasonally adjusted data for modeling 
+
+```{r}
+
+library(tseries)
+library(xlsx)
+library(forecast)
+
+setwd("/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/Data Clean up/Clean data to be used for Analysis/Cupcakes")
+
+options(java.parameters = "-Xmx1000m")
+
+cupcakes_data_social <- read.xlsx("Cupcakes_seasonally_adjusted.xlsx", sheetName = "SocialAdj")
+
+
+# subset the data to have include observations that have both sales and social media data
+
+cupcakes_data_social_ts <- cupcakes_data_social[1:260,]
+head(cupcakes_data_social_ts)
+
+
+# Read seasonally adjusted cupcakes sales volume data
+
+cupcakes_data_sales <- read.xlsx("Cupcakes_seasonally_adjusted.xlsx", sheetName = "SalesAdj")
+
+
+cupcakes_data_sales_ts <- cupcakes_data_sales
+head(cupcakes_data_sales_ts)
+
+```
+
+ARIMA Model 
+
+```{r}
+# Function
+  fun.illustrate.2=function(data,nperiod,p,d,q,P,D,Q) {
+    
+    error.holdout = rep(0,nperiod)
+    r.sq.error.holdout = rep(0, nperiod)
+    
+    
+    for(i in 1:nperiod) {
+      
+      # Keeping the first week as hold out for i[1] and then increment until 52nd value
+      # 52nd value = 52 week = 1 year i.e last year as hold out. 
+      cutoff = length(data) - i
+      #cutoff = cutoff - i
+      
+      #yvec.train=as.vector(data)[1:cutoff]
+        if(cutoff >= nperiod) {
+        yvec.train=as.vector(data)[1:cutoff]
+        #break;
+        yvec.hold=as.vector(data)[(cutoff+1):length(data)]
+        #yvec.hold
+        
+        y=ts(yvec.train, start=2010, frequency=52)
+        pred=predict(arima(y, order = c(p,d,q), seasonal = list(order = c(P,D,Q))),n.ahead=(length(data)-cutoff))
+        # Predicted - Actual? or Actual - predicted.
+        error.holdout[i]=mean((pred$pred-yvec.hold)^2)
+        if(length(pred$pred) > 1) {r.sq.error.holdout[i] = (cor(pred$pred,yvec.hold))^2}
+        #residuals.holdout[i] = yvec.hold - pred$pred 
+      }
+      
+    }
+    # Ignore R Square of the i = 1 when holdout is last week. 
+    #return(list(error.holdout=error.holdout, Average = (error.holdout)^(1/length(error.holdout))))
+    
+    return(list(error.holdout=error.holdout, Average = mean(error.holdout), R.Squared = r.sq.error.holdout, length(pred$pred), length(yvec.hold)))
+    
+    #predict(arima(y, order = c(p,d,q), seasonal = list(order = c(P,D,Q))),n.ahead=12)$pred
+    #predict(arima(y, order = c(p,d,q), seasonal = list(order = c(P,D,Q))),n.ahead=12)$pred)^2
+    
+  }
+```
+
+
+ARIMA for cupcakes Social Media Mentions 
+
+```{r, warning=FALSE, message=FALSE}
+
+# cupcakess Social Media Mentions
+
+f1<- fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 2,0,0,0,0,0)
+f2<- fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 2,0,1,0,0,0)
+f3<- fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 2,0,2,0,0,0)
+f4<- fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 2,1,1,0,0,0)
+f5<- fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 2,1,2,0,0,0)
+f6<- fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 2,1,0,0,0,0)
+f7<- fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 2,2,0,0,0,0)
+f8<- fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 2,2,1,0,0,0)
+f9<- fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 2,2,2,0,0,0)
+
+f10<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 1,0,0,0,0,0)
+f11<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 1,0,1,0,0,0)
+f12<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 1,0,2,0,0,0)
+f13<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 1,1,1,0,0,0)
+f14<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 1,1,2,0,0,0)
+f15<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 1,1,0,0,0,0)
+f16<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 1,2,0,0,0,0)
+f17<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 1,2,1,0,0,0)
+f18<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 1,2,2,0,0,0)
+
+f19<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 0,0,0,0,0,0)
+f20<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 0,0,1,0,0,0)
+f21<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 0,0,2,0,0,0)
+f22<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 0,1,0,0,0,0)
+f23<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 0,1,1,0,0,0)
+f24<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 0,1,2,0,0,0)
+f25<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 0,2,0,0,0,0)
+f26<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 0,2,1,0,0,0)
+f27<-fun.illustrate.2(cupcakes_data_social$Total.Social.Media,52, 0,2,2,0,0,0)
+
+# Concatenate
+total.social_media <- c(f1$Average, f2$Average, f3$Average, f4$Average, f5$Average, f6$Average, f7$Average, f8$Average,f9$Average, f10$Average, f11$Average, f12$Average, f13$Average, f14$Average, f15$Average, f16$Average, f17$Average, f18$Average, f19$Average, f20$Average, f21$Average, f22$Average, f23$Average, f24$Average, f25$Average, f26$Average, f27$Average)
+
+# Minimum
+summary(total.social_media)
+which.min(total.social_media)
+
+# Auto ARIMA (3,1,2)
+auto.total.social.media <- auto.arima(cupcakes_data_social$Total.Social.Media)
+auto.total.social.media
+tsdisplay(residuals(auto.total.social.media))
+
+# Forecast Auto ARIMA
+auto.total.social.media.forecast <- forecast(auto.total.social.media, h=52)
+plot(auto.total.social.media.forecast)
+
+# Train and Test Split
+cupcakes_train_social_data_arima <- cupcakes_data_social_ts[1:208,8]
+head(cupcakes_train_social_data_arima)
+
+# Choosing Auto.arima - ARIMA(3,1,2,0,0,0)
+cupcakes_train_social_arima_model <- Arima(cupcakes_train_social_data_arima, order=c(3,1,2))
+tsdisplay(residuals(cupcakes_train_social_arima_model))
+
+# Forecasting
+forecast.cupcakes.social.arima <- forecast(cupcakes_train_social_arima_model, h=52)
+forecast.cupcakes.social.arima$mean
+# Plot
+plot(forecast(object=forecast.cupcakes.social.arima,h="52"))
+```
+
+Residuals look like white noise. The total social media mentions are of I(1), therefore the series is integrated.
+
+
+
+
+
+ARIMA for cupcakes Sales Volume 
+
+
+```{r, warning=FALSE, message=FALSE}
+
+# cupcakess Sales Volume 
+
+f1<- fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 2,0,0,0,0,0)
+f2<- fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 2,0,1,0,0,0)
+f3<- fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 2,0,2,0,0,0)
+f4<- fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 2,1,1,0,0,0)
+f5<- fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 2,1,2,0,0,0)
+f6<- fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 2,1,0,0,0,0)
+f7<- fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 2,2,0,0,0,0)
+f8<- fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 2,2,1,0,0,0)
+f9<- fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 2,2,2,0,0,0)
+
+f10<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 1,0,0,0,0,0)
+f11<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 1,0,1,0,0,0)
+f12<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 1,0,2,0,0,0)
+f13<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 1,1,1,0,0,0)
+f14<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 1,1,2,0,0,0)
+f15<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 1,1,0,0,0,0)
+f16<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 1,2,0,0,0,0)
+f17<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 1,2,1,0,0,0)
+f18<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 1,2,2,0,0,0)
+
+f19<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 0,0,0,0,0,0)
+f20<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 0,0,1,0,0,0)
+f21<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 0,0,2,0,0,0)
+f22<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 0,1,0,0,0,0)
+f23<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 0,1,1,0,0,0)
+f24<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 0,1,2,0,0,0)
+f25<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 0,2,0,0,0,0)
+f26<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 0,2,1,0,0,0)
+f27<-fun.illustrate.2(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted,52, 0,2,2,0,0,0)
+
+# Concatenate
+total.sales.volume <- c(f1$Average, f2$Average, f3$Average, f4$Average, f5$Average, f6$Average, f7$Average, f8$Average,f9$Average, f10$Average, f11$Average, f12$Average, f13$Average, f14$Average, f15$Average, f16$Average, f17$Average, f18$Average, f19$Average, f20$Average, f21$Average, f22$Average, f23$Average, f24$Average, f25$Average, f26$Average, f27$Average)
+
+# Minimum
+summary(total.sales.volume)
+which.min(total.sales.volume)
+
+# Auto ARIMA (2,1,2)
+auto.sales.volume <- auto.arima(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted)
+tsdisplay(residuals(auto.sales.volume))
+
+# Forecast Auto ARIMA
+auto.sales.volume.forecast <- forecast(auto.sales.volume, h=52)
+plot(auto.sales.volume.forecast)
+
+# Train and Test Split
+cupcakes_train_sales_data_arima <- cupcakes_data_sales_ts[1:208,2]
+head(cupcakes_train_sales_data_arima)
+# Choosing Model 17 - ARIMA(2,1,2,0,0,0)
+cupcakes_train_sales_arima_model <- Arima(cupcakes_train_sales_data_arima, order=c(2,1,2))
+tsdisplay(residuals(cupcakes_train_sales_arima_model))
+
+# Forecasting
+forecast.cupcakes.sales.arima <- forecast(cupcakes_train_sales_arima_model, h=52)
+forecast.cupcakes.sales.arima$mean
+# Plot
+plot(forecast(object=forecast.cupcakes.sales.arima,h="52"))
+```
+
+
+Both time series, cupcakes sales volume and social media are of I(1) OR > 1 process,
+therefore the series is not stationary and has a trend and drift, and is not showing 
+a tendency to return back to mean. 
+
+Step 1: Check if the series is stationary. 
+
+```{r}
+
+sales.volume <- cupcakes_data_sales_ts$Sales.Seasonally.Adjusted
+#d.sales.volume <- diff(sales.volume)
+week <- cupcakes_data_sales_ts$Date
+
+
+# Descriptive statistics and plotting the data
+summary(sales.volume)
+#summary(d.sales.volume)
+
+plot.ts(week, sales.volume, main = "cupcakes sales volume", xlab = "Time", ylab = "Sales Volume")
+
+
+
+
+#Based on the cupcakes sales volume time series, there appears to be a linear trend.
+
+#Therefore, for stationarity test we include a trend element in augmented dickey fuller test. 
+
+#Augmented Dickey Fuller test for stationarity 
+
+
+
+
+# Sales Volume 
+# Null hypothesis H0: Non - Stationary 
+
+library(urca)
+summary(ur.df(y=sales.volume, lags = 52, type = "trend"))
+
+#adf.test(sales.volume, alternative = "stationary")
+
+# KPSS test 
+# Null hypothesis: Series is stationary around a constant mean
+# Alternative: Series is non stationary 
+
+kpss.test(sales.volume, null = "Level")
+
+
+```
+ADF Test: 
+The test statistics values exceed the critical values. Therefore, the series is not stationary. 
+
+KPSS Test: 
+At significance level of 5% or p-value > 0.05, we reject the 'Level' null hypothesis that the series is stationary. In other words, we have no evidence that the series is stationary. 
+
+
+:::::::::::::::::::::: SOCIAL MEDIA MENTIONS :::::::::::::::::::::::::::
+
+
+```{r}
+
+cupcakes_total_social_media <- cupcakes_data_social_ts$Total.Social.Media
+
+#d.cupcakes_blogs <- diff(cupcakes_blogs)
+week <- cupcakes_data_social_ts$Date
+
+
+# Descriptive statistics and plotting the data
+summary(cupcakes_total_social_media)
+
+
+plot(week, cupcakes_total_social_media, main = "Cupcakes Total Social media mentions", xlab = "Time", ylab = "Total social media mentions")
+
+
+# Augmented Dickey Fuller test for stationarity 
+adf.test(cupcakes_total_social_media, alternative = "stationary")
+
+
+# KPSS test 
+# Null hypothesis: Series is stationary.
+# Alternative: Series is non stationary 
+
+kpss.test(cupcakes_total_social_media, null = "Level")
+
+# Low p-value suggests that the series is Non - Stationary. We reject the null hypothesis of stationarity. 
+
+
+```
+
+Small p-value of 0.01 for KPSS test, less than significance level of 0.05 suggests that we reject the null hypothesis that the series is stationary.
+
+Now that we have established both series are not stationary and has a trend or drift component, and are of I(1) or > process, we perform Johansen test for cointegration. 
+
+```{r}
+
+# Plot Sales and Sum Social Media Mentions
+
+x1 <- cupcakes_data_sales_ts$Date
+y1 <- sales.volume
+y2 <- cupcakes_total_social_media
+
+plot( x1, y1, type="l", col="red", main = "Cupcakes", xlab = "Date", lwd = "2.5")
+par(new=TRUE)
+plot( x1, y2, type="l", col="blue", ylab = "Sales & Social Media", lwd = "2.5")
+legend("topleft", legend=c("Sales", "Social"), col=c("red", "blue"), lwd = 2.5, cex=0.8)
+
+library("urca")
+
+co.test.matrix <- cbind(sales.volume, cupcakes_total_social_media)
+
+CoIntegrationTest =ca.jo(co.test.matrix,type="trace",K=6,ecdet="none", spec="longrun")
+summary(CoIntegrationTest)
+
+```
+
+
+With lag of k=6, we see that our test statistic (r <= 1) of 10.48 is higher than at least one of # the critical values at 10% confidence level 6.50, we can assume there is cointegration of r time series. 
+
+#http://denizstij.blogspot.com/2013/11/cointegration-tests-adf-and-johansen.html 
+
+
+
+Running VAR model for Multivariate time series. 
+
+Multivariate time series analysis is used when one
+wants to model and explain the interactions and comovements
+among a group of time series variables
+
+* http://faculty.washington.edu/ezivot/econ584/notes/multivariatetimeseries.pdf 
+
+Granger Causality
+One of the main uses of VAR models is forecasting.
+
+The following intuitive notion of a variable’s forecasting
+ability is due to Granger (1969).
+
+• If a variable, or group of variables, y1 (social media mentions) is found to be helpful for predicting another variable (sales volume), or group of variables, y2 then y1 is said to Granger-cause y2; otherwise it is said to fail to Granger-cause y2.
+
+VAR Model Building and Evaluation steps: 
+
+1. Split Raw cupcakes sales and social data into train and validation (1 year). 
+2. Based on the # of observation split the ARIMA values into train and validation (1 year). 
+3. Run the VAR model on training set and forecast sales, social and measure the prediction accuracy by comparing the validation set. 
+4. Make plots of sales, social and arima (benchmark)
+5. Run the model on validation set. 
+6. Make plots of sales, social and arima (benchmark)
+7. Calculate the difference / lift / between sales arima forecasts and sales forecasts from var model. 
+
+
+```{r}
+
+library(vars)
+library(astsa)
+
+# Read cupcakes Google Trends data in for exogenous variable in VAR model
+#setwd("/Users/kevalshah/Keval_Backup/University/UChicago/Capstone/Data/Data Clean #up/Clean data to be used for Analysis")
+#cupcakes_google_trends <- read.csv("Cupcakes_Google_Trends_Searches.csv")
+
+# Plot sales, social media and google trends
+
+x1 <- cupcakes_data_sales_ts$Date
+y1 <- cupcakes_data_sales_ts$Sales.Seasonally.Adjusted
+y2 <- cupcakes_data_social_ts$Total.Social.Media
+#y3 <- cupcakes_google_trends$cupcakes.Searches
+
+#plot( x1, y1, type="l", col="red", main = "cupcakess Sales, Social #Media and Google Trends", xlab = "Date", lwd = "2.5")
+#par(new=TRUE)
+#plot( x1, y2, type="l", col="blue", ylab = "Social", lwd = "2.5")
+#par(new=TRUE)
+#plot( x1, y3, type="l", col="orange", ylab = "Social & GT", lwd = "2.5")
+#legend("top", legend=c("Sales", "Social"), col=c("red", "blue"), lwd = #2.5, cex=0.8)
+
+
+# Run VAR Model on Training set 
+
+length(cupcakes_data_social_ts$Total.Social.Media)
+length(cupcakes_data_sales_ts$Sales.Seasonally.Adjusted)
+length(cupcakes_data_sales_ts$Date)
+#length(cupcakes_google_trends$cupcakes.Searches)
+
+Train_cupcakes_sales <- cupcakes_data_sales_ts[1:208,2]
+Train_cupcakes_week <- cupcakes_data_sales_ts[1:208,1]
+Train_cupcakes_social <- cupcakes_data_social_ts[1:208,8]
+#Train_cupcakes_google_trends <- cupcakes_google_trends[1:208,3]
+
+# Endogenous variables 
+Train_VAR_cupcakes <- cbind(Train_cupcakes_sales, Train_cupcakes_social)
+
+#VAR Select
+#VARselect(Train_VAR_cupcakes, lag.max = 10, type = "both", exogen = cbind(x3 #=Train_cupcakes_google_trends))
+
+VARselect(Train_VAR_cupcakes, lag.max = 10, type = "both")
+
+
+Train_VAR_model_cupcakes <- VAR(Train_VAR_cupcakes, p=7, type="both")
+summary(Train_VAR_model_cupcakes)
+
+
+
+```
+
+The adjusted R-Squared of 69% for equation predicting sales as dependent variable and endogenous variables of social media and sales with lag order of 7 and with constant and trend deterministic variable indicates a good fit.
+
+On the other hand, the inverse, of predicting social media with sales as predictors has Adj. R-Squared of 94% which indicates that sales is a good lagging indicator of social media. 
+
+Now, we fit our training model on our validation set and check the prediction error / accuracy. 
+
+```{r}
+
+# Run VAR Model on Validation / Test Set 
+
+Test_cupcakes_sales <- cupcakes_data_sales_ts[209:260,2]
+Test_cupcakes_week <- cupcakes_data_sales_ts[209:260,1]
+Test_cupcakes_social <- cupcakes_data_social_ts[209:260,8]
+#Test_cupcakes_google_trends <- cupcakes_google_trends[209:260,3]
+
+length(Test_cupcakes_sales)
+length(Test_cupcakes_week)
+length(Test_cupcakes_social)
+#length(Test_cupcakes_google_trends)
+
+# Endogenous variables 
+Test_VAR_cupcakes <- cbind(Test_cupcakes_sales, Test_cupcakes_social)
+
+
+```
+
+
+
+```{r}
+
+# cupcakes prediction
+
+#var_train_forecasts <- predict(Train_VAR_model_cupcakes, n.ahead = 52, ci = 0.95, dumvar = #cbind(x3 =Test_cupcakes_google_trends))
+
+var_train_forecasts <- predict(Train_VAR_model_cupcakes, n.ahead = 52, ci = 0.95)
+
+
+
+summary(var_train_forecasts)
+head(var_train_forecasts)
+
+plot(var_train_forecasts, type = "l", main = "cupcakes sales + social forecast using train model on test set")
+
+# Check accuracy of our forecasts using train model on test data 
+
+# cupcakes sales volume forecast
+accuracy(var_train_forecasts$fcst$Train_cupcakes_sales[,1], Test_cupcakes_sales)
+
+# cupcakes social media forecast
+accuracy(var_train_forecasts$fcst$Train_cupcakes_social[,1], Test_cupcakes_social)
+
+```
+
+
+Plot Raw Sales and Social media with Forecasts 
+
+```{r}
+
+# Append raw + forecast
+cupcakes.sales.VAR.All <- append(Train_cupcakes_sales, var_train_forecasts$fcst$Train_cupcakes_sales[,1])
+cupcakes.social.VAR.All <- append(Train_cupcakes_social, var_train_forecasts$fcst$Train_cupcakes_social[,1])
+cupcakes.week.All <- append(Train_cupcakes_week, Test_cupcakes_week)
+
+cupcakes_df_total <- data.frame(cupcakes.week.All, cupcakes.sales.VAR.All, cupcakes.social.VAR.All)
+
+
+mar.default <- c(3,3,3,3) + 0.1
+par(mar = mar.default + c(0, 1, 0, 0))
+plot(cupcakes_df_total[,1:2], type="l", 
+     ylab="Sales Volume", xlab="Time (Year)", 
+     lwd=3, main="cupcakes: VAR Model", col="hotpink")
+par(new=TRUE)
+plot(cupcakes_df_total[,3], type="l", col="darkolivegreen1", axes=FALSE, 
+     ylab="", xlab="", lwd=3)
+axis(4)
+mtext("Social Media Mentions", side=4, line=+2, adj=0.5)
+abline(v=208, lty=3, lwd=3)
+legend("top", legend=c("Sales Volume", "Social Media Mentions"), 
+       col=c("hotpink","darkolivegreen1"), lwd=3, cex=0.75)
+
+
+```
+
+Comparing sales prediction to ARIMA benchmark, make plots and calculate lift 
+
+```{r}
+# Calculate accuracy of arima sales forecast and VAR model sales forecast to actual sales values in 
+# test set 
+# Compare prediction error of each and calculate the lift obtained from prediction error. 
+
+
+# Difference in Predictions cupcakess
+
+All_cupcakes_Forecasts <- cbind.data.frame(Test_week = as.Date(Test_cupcakes_week), AR=forecast.cupcakes.sales.arima$mean, VAR=var_train_forecasts$fcst$Train_cupcakes_sales[,1],
+                   ACTUAL=Test_cupcakes_sales)
+head(All_cupcakes_Forecasts)
+
+# Calculate the RMSE. Predicted - Actual values - ARIMA. 
+AR.error <- forecast.cupcakes.sales.arima$mean - Test_cupcakes_sales
+ar.cupcakes.sales.rmse <- sqrt(mean(AR.error^2))
+# Calculate MAE
+ar.cupcakes.sales.mae <- mean(abs(AR.error))
+
+
+# Calculate the RMSE. Predicted - Actual values - VAR. 
+VAR.error <- var_train_forecasts$fcst$Train_cupcakes_sales[,1] - Test_cupcakes_sales
+var.cupcakes.sales.rmse <- sqrt(mean(VAR.error^2))
+# Calculate MAE
+var.cupcakes.sales.mae <- mean(abs(VAR.error))
+
+
+# Calculate Lift in prediction accuracy 
+paste(round((((ar.cupcakes.sales.rmse - var.cupcakes.sales.rmse)/ar.cupcakes.sales.rmse))*100, digits = 2), "%", sep = "")
+paste(round((((ar.cupcakes.sales.mae - var.cupcakes.sales.mae)/ar.cupcakes.sales.mae))*100, digits = 2), "%", sep = "")
+
+# Create a table to compare RMSE and MAE 
+accuracy_table <- matrix(c(32.60731,35.65068,"-9.33%",23.40172,29.79953,"-27.34%"),ncol=3,byrow=TRUE)
+colnames(accuracy_table) <- c("ARIMA","VAR", "Lift in Prediction accuracy")
+rownames(accuracy_table) <- c("RMSE","MAE")
+accuracy_table
+
+# Append ARIMA sales data and forecasts 
+cupcakes.sales.arima.All <- append(cupcakes_train_sales_data_arima, forecast.cupcakes.sales.arima$mean)
+
+cupcakes.sales.actual.All <- append(Train_cupcakes_sales, Test_cupcakes_sales)
+
+# Create a dataframe w Raw sales data, VAR Forecasts, ARIMA Forecasts and
+# Test data. 
+
+cupcakes_df_total_final <- cbind.data.frame(cupcakes.week.All, cupcakes.sales.VAR.All, cupcakes.sales.actual.All, cupcakes.sales.arima.All)
+
+
+mar.default <- c(3,3,3,3) + 0.1
+par(mar = mar.default + c(0, 1, 0, 0))
+plot(cupcakes_df_total_final[,1:2], type="l", 
+     ylab="", xlab="Time (Year)",
+     lwd=3, main="cupcakes Sales Volume Forecasts Comparison", col="hotpink")
+par(new=TRUE)
+# Actual data train + test
+plot(cupcakes_df_total_final[,3], type="l", col="darkolivegreen1", axes=FALSE, 
+     ylab="", xlab="", lwd=3)
+par(new=TRUE)
+# ARIMA Forecast 
+plot(cupcakes_df_total_final[,4], type="l", col="blue", axes=FALSE, 
+     ylab="", xlab="", lwd=3)
+
+abline(v=208, lty=3, lwd=3)
+legend("topleft", legend=c("VAR", "Actual", "ARIMA"), 
+       col=c("hotpink","darkolivegreen1","blue"), lwd=3, cex=0.75)
+
+```
+
+Based on the above plot we can see that ARIMA model predicts better than VAR model. This is in contrast to clementine where VAR model indeed had better accuracy rates. 
+
+```{r}
+print(accuracy_table)
+```
+
+
+
+Predictions for 2015 
+ 
+```{r}
+
+# Forecasting with VAR
+
+var_cupcakes_forecasts_2015 <- predict(Train_VAR_model_cupcakes, n.ahead = 104, ci = 0.95)
+
+# Forecasting ARIMA
+forecast.cupcakes.sales.arima_2015 <- forecast(cupcakes_train_sales_arima_model, h=104)
+forecast.cupcakes.sales.arima_2015$mean
+# Plot
+plot(forecast(object=forecast.cupcakes.sales.arima_2015,h="104"))
+plot(var_cupcakes_forecasts_2015, type = "l", main = "2015 Cupcakes sales + social forecast using train model on test set")
+
+
+
+
+# Append ARIMA sales data and forecasts 
+cupcakes.sales.arima.2015 <- append(cupcakes_train_sales_data_arima, forecast.cupcakes.sales.arima_2015$mean)
+
+length(cupcakes.sales.arima.2015)
+
+# Append VAR data and forecasts 
+cupcakes.sales.VAR.2015 <- append(Train_cupcakes_sales, var_cupcakes_forecasts_2015$fcst$Train_cupcakes_sales[,1])
+
+# Create a dataframe VAR Forecasts, ARIMA Forecasts
+
+cupcakes_df_total_final_2015 <- cbind.data.frame(cupcakes.week.All, cupcakes.sales.VAR.2015, cupcakes.sales.arima.2015)
+
+
+mar.default <- c(3,3,3,3) + 0.1
+par(mar = mar.default + c(0, 1, 0, 0))
+plot(cupcakes_df_total_final_2015[,1:2], type="l", 
+     ylab="", xlab="Time (Year)",
+     lwd=3, main="cupcakes Sales Volume Forecasts Comparison", col="hotpink")
+par(new=TRUE)
+# Actual data train + test
+plot(cupcakes_df_total_final_2015[,3], type="l", col="darkolivegreen1", axes=FALSE, 
+     ylab="", xlab="", lwd=3)
+par(new=TRUE)
+# ARIMA Forecast 
+plot(cupcakes_df_total_final[,4], type="l", col="blue", axes=FALSE, 
+     ylab="", xlab="", lwd=3)
+
+abline(v=208, lty=3, lwd=3)
+legend("topleft", legend=c("VAR", "Actual", "ARIMA"), 
+       col=c("hotpink","darkolivegreen1","blue"), lwd=3, cex=0.75)
+
+
+```
+
+VAR Model for 2015 Predictions 
+
+```{r}
+
+
+
+
+
+
+
+```
+
